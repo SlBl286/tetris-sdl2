@@ -15,9 +15,44 @@ pub fn main() {
         .position_centered()
         .build()
         .unwrap();
-
+    const TETRIMINOS: [[[u8; 4]; 2]; 7] = [
+        //0
+        [   [1, 1, 0, 0], 
+            [1, 1, 0, 0]
+        ],
+        //i
+        [
+            [0, 0, 0, 0], 
+            [1, 1, 1, 1]
+        ],
+        //t
+        [
+            [0, 1, 0, 0], 
+            [1, 1, 1, 0]
+        ],
+        //l
+        [
+            [0, 0, 1, 0], 
+            [1, 1, 1, 0]
+        ],
+        //j
+        [
+            [1, 0, 0, 0], 
+            [1, 1, 1, 0]
+        ],
+        //s
+        [
+            [0, 1, 1, 0], 
+            [1, 1, 0, 0]
+        ],
+        //z
+        [
+            [1, 1, 0, 0], 
+            [0, 1, 1, 0]
+        ]
+    ];
     let mut rect = FRect::new(250.0, 10.0, 50.0, 50.0);
-    let rect_color = Color::RGB(55, 55, 55);
+    let rect_color = Color::RGB(150, 150, 55);
     const H_SPEED: f32 = 50.0;
     const V_SPEED: f32 = 50.0;
 
@@ -46,16 +81,10 @@ pub fn main() {
                 } => {
                     let key = keycode.unwrap();
                     if key == Keycode::Left {
-                        rect.reposition((
-                            rect.x - (H_SPEED ),
-                            rect.y,
-                        ));
+                        rect.reposition((rect.x - (H_SPEED), rect.y));
                     }
                     if key == Keycode::Right {
-                        rect.reposition((
-                            rect.x + (H_SPEED ),
-                            rect.y,
-                        ));
+                        rect.reposition((rect.x + (H_SPEED), rect.y));
                     }
                 }
                 _ => {}
@@ -71,10 +100,9 @@ pub fn main() {
         while accumulator >= dt {
             accumulator -= dt;
         }
-        if v_delta >= 0.8{
-
-            if rect.height()+ rect.y < 600.0 {
-                rect.reposition((rect.x, (rect.y + V_SPEED ).min(600.0)));
+        if v_delta >= 0.8 {
+            if rect.height() + rect.y < 600.0 {
+                rect.reposition((rect.x, (rect.y + V_SPEED).min(600.0)));
             }
             v_delta = 0.0;
         }
