@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 extern crate sdl2;
 
 use rand::seq::SliceRandom;
@@ -6,7 +6,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
-use sdl2::rect::{FRect, Point, Rect};
+use sdl2::rect::{FRect, Rect};
 use tetris_sdl2::frame_manager::{FrameManager, FrameManagerTrait};
 
 pub fn main() {
@@ -46,7 +46,7 @@ pub fn main() {
     let mut order_index: usize = 0;
 
     let mut current_tetrimino_pos: (usize, usize) = START_POS;
-    let game_grid: [[bool; 10]; 20] = std::array::from_fn(|i| std::array::from_fn(|j| false));
+    let mut game_grid: [[bool; 10]; 20] = std::array::from_fn(|_| std::array::from_fn(|_| false));
 
     let ttf_context = sdl2::ttf::init().unwrap();
     let font_path = "./assets/Chewy-Regular.ttf"; // đường dẫn tới file .ttf
@@ -56,7 +56,9 @@ pub fn main() {
 
     let mut accumulator = 0.0;
     let mut v_delta = 0.0;
-    let mut level = 1;
+    let level = 1;
+    let mut speed_up = 0;
+    let mut stop = false;
 
     let mut canvas = window.into_canvas().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -87,13 +89,13 @@ pub fn main() {
                         }
                     }
                     if key == Keycode::Down {
-                        level = 10
+                        speed_up = 10
                     }
                 }
                 Event::KeyUp { keycode, .. } => {
                     let key = keycode.unwrap();
                     if key == Keycode::Down {
-                        level = 1
+                        speed_up = 0
                     }
                     if key == Keycode::C {
                         if order_index < 6 {
@@ -121,32 +123,46 @@ pub fn main() {
         while accumulator >= fm.get_target_fps() {
             accumulator -= fm.get_target_fps();
         }
-        if v_delta >= (0.8 - ((level - 1) as f32) * 0.007).powi(level - 1) {
+        if v_delta >= (0.8 - ((level + speed_up - 1) as f32) * 0.007).powi(level + speed_up - 1) {
             if current_tetrimino_pos.1 < 18 {
                 current_tetrimino_pos.1 += 1;
+            } else {
+                if order_index < 6 {
+                    order_index += 1;
+                } else {
+                    order_index = 0;
+                    tetriniminos_order.shuffle(&mut rng);
+                }
+                current_tetrimino_pos = START_POS;
             }
             v_delta = 0.0;
         }
 
         for (ri, row) in game_grid.iter().enumerate() {
             for (ci, value) in row.iter().enumerate() {
+                if *value {
+                    canvas.set_draw_color(rect_color);
+                    let _ = canvas.fill_rect(Rect::new(
+                        (ci as i32 * GRID_UNIT as i32) + (LEFT_MARGIN as i32),
+                        ri as i32 * GRID_UNIT as i32,
+                        GRID_UNIT as u32,
+                        GRID_UNIT as u32,
+                    ));
+                }
                 canvas.set_draw_color(Color::BLACK);
                 let _ = canvas.draw_rect(Rect::new(
-                    (ci as i32 * 40) + 120,
+                    (ci as i32 * GRID_UNIT as i32) + (LEFT_MARGIN as i32),
                     ri as i32 * GRID_UNIT as i32,
                     GRID_UNIT as u32,
                     GRID_UNIT as u32,
                 ));
             }
         }
-
+        
         let current_tetrimino = TETRIMINOS[tetriniminos_order[order_index] as usize];
         for (ri, row) in current_tetrimino.iter().enumerate() {
             for (ci, cell) in row.iter().enumerate() {
                 if *cell == 1 {
-                    if ri == 1 {
-                        
-                    }
                     canvas.set_draw_color(rect_color);
                     let _ = canvas.fill_frect(FRect::new(
                         (LEFT_MARGIN as f32)
@@ -163,7 +179,7 @@ pub fn main() {
                         GRID_UNIT as f32,
                         GRID_UNIT as f32,
                     ));
-                    if current_tetrimino_pos.1 < 18   {
+                    if current_tetrimino_pos.1 < 18 {
                         canvas.set_draw_color(Color::RED);
                         let _ = canvas.draw_frect(FRect::new(
                             (LEFT_MARGIN as f32)
@@ -173,8 +189,32 @@ pub fn main() {
                             GRID_UNIT as f32,
                         ));
                     }
+                    if current_tetrimino_pos.1 == 18 {
+                        stop = true;
+                        break;
+                    } else if current_tetrimino_pos.1 < 18 {
+                        let yi = current_tetrimino_pos.1 + 1;
+                        let xi = current_tetrimino_pos.0 + ci;
+                        if game_grid[yi][xi] {
+                            stop = true;
+                            break;
+                        }
+                    }
                 }
             }
+            if stop {
+                break;
+            }
+        }
+        if stop {
+            for (ri, row) in current_tetrimino.iter().enumerate() {
+                for (ci, cell) in row.iter().enumerate() {
+                    if *cell == 1 {
+                        game_grid[ri + current_tetrimino_pos.1][ci + current_tetrimino_pos.0] = true;
+                    }
+                }
+            }
+            stop = false;
         }
         let level_text = format!("level {}", level);
         let texture_creator = canvas.texture_creator();
