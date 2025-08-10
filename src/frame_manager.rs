@@ -7,9 +7,10 @@ pub struct FrameManager {
 
 pub trait FrameManagerTrait {
     fn new(target_fps: u32) -> Self;
-    fn get_target_fps(&mut self) -> f32;
+    fn get_target_fps(&mut self) -> u8;
     fn delta_time(&mut self) -> Duration;
     fn delay_to_maintain_fps(&mut self);
+    fn get_frame_duration(&mut self) -> f32;
 }
 
 impl FrameManagerTrait for FrameManager {
@@ -19,8 +20,11 @@ impl FrameManagerTrait for FrameManager {
             last_frame: Instant::now(),
         }
     }
-    fn get_target_fps(&mut self) -> f32 {
+    fn get_frame_duration(&mut self) -> f32 {
         self.target_frame_duration.as_secs_f32()
+    }
+    fn get_target_fps(&mut self) -> u8 {
+        (1.0 /self.target_frame_duration.as_secs_f32()) as u8
     }
     fn delay_to_maintain_fps(&mut self) {
         let now = Instant::now();
