@@ -11,10 +11,10 @@ use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::{FRect, Point, Rect};
 
-use tetris_sdl2::triangle::Triangle;
 use tetris_sdl2::RotateDirect;
 use tetris_sdl2::frame_manager::{FrameManager, FrameManagerTrait};
 use tetris_sdl2::text::Text;
+use tetris_sdl2::triangle::Triangle;
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -57,7 +57,15 @@ pub fn main() {
     let mut rng = rand::rng();
     let mut tetriniminos_order: [usize; 7] = std::array::from_fn(|i| i as usize);
     tetriniminos_order.shuffle(&mut rng);
-    let mut triangle = Triangle::new((Point::new(100, 50),Point::new(150, 100),Point::new(200, 50)),true,Some(Color::RGB(150, 150, 55)));
+    let mut triangle = Triangle::new(
+        (
+            Point::new(100, 50),
+            Point::new(150, 100),
+            Point::new(200, 50),
+        ),
+        true,
+        Some(Color::RGBA(255, 150, 55,255)),
+    );
     let mut order_index: usize = 0;
     let mut current_tetrimino_pos: (i8, i8) = START_POS;
     let mut game_grid: [[bool; 10]; 20] = std::array::from_fn(|_| std::array::from_fn(|_| false));
@@ -217,16 +225,19 @@ pub fn main() {
                     }
                 }
                 Event::MouseButtonUp {
-                    mouse_btn, clicks, x,y,..
+                    mouse_btn,
+                    clicks,
+                    x,
+                    y,
+                    ..
                 } => {
                     if mouse_btn == MouseButton::Left {
-                        println!("{} | {}",x,y);
+                        println!("{} | {}", x, y);
                         let contain = triangle.contain_point(Point::new(x, y));
                         if contain {
                             level += 1;
                         }
                     };
-                    
                 }
                 _ => {}
             }
