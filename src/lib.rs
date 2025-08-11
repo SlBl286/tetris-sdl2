@@ -1,5 +1,6 @@
 pub mod frame_manager;
 pub  mod text;
+pub  mod triangle;
 #[derive(Debug)]
 pub enum RotateDirect {
     North = 0,

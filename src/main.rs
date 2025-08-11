@@ -9,7 +9,9 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
-use sdl2::rect::{FRect, Rect};
+use sdl2::rect::{FRect, Point, Rect};
+
+use tetris_sdl2::triangle::Triangle;
 use tetris_sdl2::RotateDirect;
 use tetris_sdl2::frame_manager::{FrameManager, FrameManagerTrait};
 use tetris_sdl2::text::Text;
@@ -55,7 +57,7 @@ pub fn main() {
     let mut rng = rand::rng();
     let mut tetriniminos_order: [usize; 7] = std::array::from_fn(|i| i as usize);
     tetriniminos_order.shuffle(&mut rng);
-
+    let mut triangle = Triangle::new((Point::new(100, 50),Point::new(150, 100),Point::new(200, 50)),true,Some(Color::RGB(150, 150, 55)));
     let mut order_index: usize = 0;
     let mut current_tetrimino_pos: (i8, i8) = START_POS;
     let mut game_grid: [[bool; 10]; 20] = std::array::from_fn(|_| std::array::from_fn(|_| false));
@@ -86,7 +88,7 @@ pub fn main() {
     let mut h_delta = 0.0;
 
     let mut lockdown_time: f32 = 0.0;
-    let level = 2;
+    let mut level = 2;
     let mut speed_up: f32 = 1.0;
     let mut prepare_lockdown = false;
     let mut lockdown = false;
@@ -215,8 +217,17 @@ pub fn main() {
                     }
                 }
                 Event::MouseButtonUp {
-                    mouse_btn, clicks, ..
-                } => if mouse_btn == MouseButton::Left && clicks == 2 {},
+                    mouse_btn, clicks, x,y,..
+                } => {
+                    if mouse_btn == MouseButton::Left {
+                        println!("{} | {}",x,y);
+                        let contain = triangle.contain_point(Point::new(x, y));
+                        if contain {
+                            level += 1;
+                        }
+                    };
+                    
+                }
                 _ => {}
             }
         }
@@ -364,6 +375,7 @@ pub fn main() {
         level_text.render(&mut canvas);
         time_text.render(&mut canvas);
         fps_text.render(&mut canvas);
+        triangle.render(&mut canvas);
         canvas.present();
         fm.delay_to_maintain_fps();
     }
