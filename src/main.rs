@@ -232,7 +232,6 @@ pub fn main() {
                     ..
                 } => {
                     if mouse_btn == MouseButton::Left {
-                        println!("{} | {}", x, y);
                         let contain = triangle.contain_point(Point::new(x, y));
                         if contain {
                             level += 1;
